@@ -116,9 +116,9 @@ func update_icon() bool {
 	minutes = seconds / 60
 	seconds -= minutes * 60
 	if seconds == 0 {
-		text = fmt.Sprintf("%s, %d%%\n", status, pfull)
+		text = fmt.Sprintf("%s, %d%%", status, pfull)
 	} else {
-		text = fmt.Sprintf("%s, %d%%, %d:%d remaining\n",
+		text = fmt.Sprintf("%s, %d%%, %d:%02d remaining",
 		           status,
 		           pfull,
 		           hours,
