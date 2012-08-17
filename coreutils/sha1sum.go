@@ -20,7 +20,6 @@ import (
 	"crypto/sha1"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
@@ -32,14 +31,9 @@ func main() {
 	var (
 		file *os.File
 		err error
-		data []byte
 	)
 	flag.Parse()
 	fName := flag.Arg(0)
-	if *doCheck {
-		// Check
-		return
-	}
 	if fName == ""  || fName == "-" {
 		file = os.Stdin
 		fName = "-"
@@ -47,9 +41,8 @@ func main() {
 		file, err = os.Open(fName)
 		ckError(err)
 	}
-	data, err = ioutil.ReadAll(file)
-	ckError(err)
-	hash := sha1.New()
-	hash.Write(data)
-	fmt.Printf("%x  %s\n", hash.Sum(nil), fName)
+	if *doCheck {
+		ckSums(file, sha1.New)
+	}
+	fmt.Printf("%s  %s\n", ckSum(file, sha1.New), fName)
 }
