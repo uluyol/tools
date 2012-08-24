@@ -5,12 +5,10 @@ OBJS = $(SRCS:.go=)
 
 all: $(SRCS)
 
-%.go: dummy
-	@echo " BUILD " $@
+.PHONY: $(SRCS)
+$(SRCS):
+	@echo " GO " $@
 	@go build $@ $(LIBS)
 
 clean:
 	rm -f $(OBJS)
-
-dummy:
-	@true
