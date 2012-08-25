@@ -25,7 +25,7 @@ import (
 
 var doCheck *bool = flag.Bool("c",
                               false,
-			      "read MD5 sums from the FILEs and check them")
+                              "read MD5 sums from the FILEs and check them")
 
 func main() {
 	var (

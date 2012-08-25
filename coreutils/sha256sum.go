@@ -25,7 +25,7 @@ import (
 
 var doCheck *bool = flag.Bool("c",
                               false,
-			      "read SHA256 sums from the FILEs and check them")
+                              "read SHA256 sums from the FILEs and check them")
 
 func main() {
 	var (
