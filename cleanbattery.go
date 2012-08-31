@@ -156,7 +156,7 @@ func get_icon_name(status string, pfull int64) string {
 		case pfull < 60:
 			return "battery_two_thirds"
 		case pfull < 75:
-			return "battery_third_fourth"
+			return "battery_third_fouth"
 		default:
 			return "battery_full"
 		}
