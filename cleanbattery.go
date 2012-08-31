@@ -28,25 +28,25 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
-	"strconv"
 	"bytes"
-	"github.com/mattn/go-gtk/gtk"
+	"fmt"
 	"github.com/mattn/go-gtk/glib"
+	"github.com/mattn/go-gtk/gtk"
+	"io/ioutil"
 	"os"
+	"strconv"
 )
 
 const (
-	TIMEOUT = 3000
-	NEWLINE = byte(10)
-	STATUS_CHARGING = "Charging"
+	TIMEOUT            = 3000
+	NEWLINE            = byte(10)
+	STATUS_CHARGING    = "Charging"
 	STATUS_DISCHARGING = "Discharging"
 )
 
 var (
 	status_icon *gtk.GtkStatusIcon
-	full int64
+	full        int64
 )
 
 func main() {
@@ -54,10 +54,14 @@ func main() {
 	glib.SetApplicationName("zzcleanbattery")
 
 	buf, err := ioutil.ReadFile("/sys/class/power_supply/BAT0/energy_full")
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 	str := string(bytes.Split(buf, []byte{NEWLINE})[0])
 	full, err = strconv.ParseInt(str, 10, 64)
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 
 	status_icon = gtk.StatusIcon()
 	status_icon.SetTitle("zzcleanbattery")
@@ -71,30 +75,40 @@ func main() {
 func update_icon() bool {
 
 	var (
-		hours int64
+		hours   int64
 		minutes int64
 		seconds int64
-		pfull int64
-		rate int64
-		now int64
-		status string
-		text string
+		pfull   int64
+		rate    int64
+		now     int64
+		status  string
+		text    string
 	)
 
 	buf, err := ioutil.ReadFile("/sys/class/power_supply/BAT0/energy_now")
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 	str := string(bytes.Split(buf, []byte{NEWLINE})[0])
 	now, err = strconv.ParseInt(str, 10, 64)
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 
 	buf, err = ioutil.ReadFile("/sys/class/power_supply/BAT0/power_now")
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 	str = string(bytes.Split(buf, []byte{NEWLINE})[0])
 	rate, err = strconv.ParseInt(str, 10, 64)
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 
 	buf, err = ioutil.ReadFile("/sys/class/power_supply/BAT0/status")
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 	status = string(bytes.Split(buf, []byte{NEWLINE})[0])
 
 	pfull = now * 100 / full
@@ -119,10 +133,10 @@ func update_icon() bool {
 		text = fmt.Sprintf("%s, %d%%", status, pfull)
 	} else {
 		text = fmt.Sprintf("%s, %d%%, %d:%02d remaining",
-		           status,
-		           pfull,
-		           hours,
-		           minutes)
+			status,
+			pfull,
+			hours,
+			minutes)
 	}
 
 	status_icon.SetTooltipText(text)

@@ -24,17 +24,17 @@ import (
 )
 
 var doCheck *bool = flag.Bool("c",
-                              false,
-                              "read SHA256 sums from the FILEs and check them")
+	false,
+	"read SHA256 sums from the FILEs and check them")
 
 func main() {
 	var (
 		file *os.File
-		err error
+		err  error
 	)
 	flag.Parse()
 	fName := flag.Arg(0)
-	if fName == ""  || fName == "-" {
+	if fName == "" || fName == "-" {
 		file = os.Stdin
 		fName = "-"
 	} else {

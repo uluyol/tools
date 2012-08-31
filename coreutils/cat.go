@@ -22,8 +22,8 @@ import (
 )
 
 var singleByte *bool = flag.Bool("u",
-                                   false,
-                                   "Write bytes from the input file to stout without delay")
+	false,
+	"Write bytes from the input file to stout without delay")
 
 func main() {
 	flag.Parse()

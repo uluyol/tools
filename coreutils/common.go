@@ -34,7 +34,7 @@ func ckError(err error) {
 
 func ckSums(in io.Reader, new func() hash.Hash) {
 	var (
-		err error
+		err   error
 		fails int
 	)
 	fData := make([]byte, 1024)
@@ -44,14 +44,19 @@ func ckSums(in io.Reader, new func() hash.Hash) {
 		fData, isPrefix, err = bufIn.ReadLine()
 		if err == io.EOF {
 			break
-		} else { ckError(err) }
+		} else {
+			ckError(err)
+		}
 		if isPrefix {
 			fmt.Fprintf(os.Stderr, "Buffer not large enough\n")
 			os.Exit(1)
 		}
 		hashLen := 0
 		for i, v := range fData {
-			if v == byte(' ') { hashLen = i; break }
+			if v == byte(' ') {
+				hashLen = i
+				break
+			}
 		}
 		hash := string(fData[:hashLen])
 		fName := string(fData[hashLen+2:])
@@ -88,7 +93,9 @@ func cat(in *os.File, singleByte bool) {
 		buf := make([]byte, 1)
 		for {
 			n, _ := in.Read(buf)
-			if n != 1 { break }
+			if n != 1 {
+				break
+			}
 			_, err := os.Stdout.Write(buf)
 			ckError(err)
 		}
