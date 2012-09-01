@@ -100,9 +100,10 @@ func cat(in *os.File, singleByte bool) {
 			ckError(err)
 		}
 	} else {
-		buf, err := ioutil.ReadAll(in)
+		buf := make([]byte, 4096)
+		n, err := in.Read(buf)
 		ckError(err)
-		_, err = os.Stdout.Write(buf)
+		_, err = os.Stdout.Write(buf[:n])
 		ckError(err)
 	}
 }
