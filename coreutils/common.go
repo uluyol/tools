@@ -100,8 +100,8 @@ func cat(in *os.File, singleByte bool) {
 			ckError(err)
 		}
 	} else {
+		buf := make([]byte, 4096)
 		for {
-			buf := make([]byte, 4096)
 			n, err := in.Read(buf)
 			ckError(err)
 			_, err = os.Stdout.Write(buf[:n])
