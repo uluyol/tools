@@ -26,14 +26,22 @@ var singleByte *bool = flag.Bool("u",
 	"Write bytes from the input file to stout without delay")
 
 func main() {
+	var (
+		file *os.File
+		err error
+	)
 	flag.Parse()
 	fNames := flag.Args()
 	if len(fNames) < 1 {
 		cat(os.Stdin, *singleByte)
 	} else {
 		for _, fName := range fNames {
-			file, err := os.Open(fName)
-			ckError(err)
+			if fName == "-" {
+				file = os.Stdin
+			} else {
+				file, err = os.Open(fName)
+				ckError(err)
+			}
 			cat(file, *singleByte)
 		}
 	}
