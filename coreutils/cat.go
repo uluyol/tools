@@ -28,7 +28,7 @@ var singleByte *bool = flag.Bool("u",
 func main() {
 	var (
 		file *os.File
-		err error
+		err  error
 	)
 	flag.Parse()
 	fNames := flag.Args()
