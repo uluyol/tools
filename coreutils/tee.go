@@ -32,11 +32,11 @@ var ignoreInt *bool = flag.Bool("i",
 
 func main() {
 	var outs []*os.File
-	mode := os.O_WRONLY|os.O_CREATE
+	mode := os.O_WRONLY | os.O_CREATE
 	flag.Parse()
 	paths := flag.Args()
 	if *doAppend {
-		mode = os.O_WRONLY|os.O_APPEND|os.O_CREATE
+		mode = os.O_WRONLY | os.O_APPEND | os.O_CREATE
 	}
 	if *ignoreInt {
 		c := make(chan os.Signal, 1)
