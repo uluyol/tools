@@ -28,7 +28,7 @@ func main() {
 	if len(mesgs) < 2 {
 		mesgs = []string{"y"}
 	}
-	mesg := strings.Join(mesgs, " ")
+	mesg := strings.Join(mesgs[1:], " ")
 	for {
 		fmt.Printf("%s\n", mesg)
 	}
