@@ -29,7 +29,7 @@ type location struct {
 	depth int
 }
 
-func search(dir, name string, startdepth int) (path string, err error) {
+func search(dir string, names []string, startdepth int) (path string, err error) {
 	q := list.New()
 	q.PushBack(location{dir, startdepth})
 	for q.Len() > 0 {
@@ -44,8 +44,12 @@ func search(dir, name string, startdepth int) (path string, err error) {
 				continue
 			}
 			absPath := cloc.path + "/" + e.Name()
-			if e.Name() == name {
-				return absPath, nil
+			if e.Name() == names[0] {
+				if len(names) == 1 {
+					return absPath, nil
+				} else if subPath, err := search(absPath, names[1:], cloc.depth+1); err == nil {
+					return subPath, nil
+				}
 			}
 			if cloc.depth < *maxDepth {
 				q.PushBack(location{absPath, cloc.depth + 1})
@@ -56,11 +60,10 @@ func search(dir, name string, startdepth int) (path string, err error) {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "Usage: %s dirname\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "Usage: %s dirname[/subdir/...]\n", os.Args[0])
 	flag.PrintDefaults()
 }
 
-// TODO: Add support for partial paths (i.e. dir1/dir2/.../dirN)
 func main() {
 	flag.Usage = usage
 	flag.Parse()
@@ -68,13 +71,14 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	name := flag.Arg(0)
+	searchpath := flag.Arg(0)
 	root := os.Getenv(envRootVar)
 	if root == "" {
 		fmt.Fprintln(os.Stderr, envRootVar+" must be set.")
 		os.Exit(2)
 	}
-	p, err := search(root, name, 0)
+	names := strings.Split(searchpath, string(os.PathSeparator))
+	p, err := search(root, names, 0)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(3)
