@@ -1,6 +1,9 @@
 /*
 This tool recursively searches $SRCSEARCHROOT for the directory queried and will return the path
 of the most shallow result. Directories are searched in lexicographic order.
+
+A bash include file is included with this tool that adds a scd command which uses srcsearch to
+quickly cd into a workspace.
 */
 
 package main
