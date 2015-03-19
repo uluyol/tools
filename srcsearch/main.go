@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 const envRootVar = "SRCSEARCHROOT"
@@ -39,7 +40,7 @@ func search(dir, name string, startdepth int) (path string, err error) {
 			return "", err
 		}
 		for _, e := range entries {
-			if !e.IsDir() {
+			if !e.IsDir() || (*ignoreHidden && strings.HasPrefix(e.Name(), ".")) {
 				continue
 			}
 			absPath := cloc.path + "/" + e.Name()
