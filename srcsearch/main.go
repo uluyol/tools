@@ -28,9 +28,9 @@ type location struct {
 	depth int
 }
 
-func search(dir, name string) (path string, err error) {
+func search(dir, name string, startdepth int) (path string, err error) {
 	q := list.New()
-	q.PushBack(location{dir, 0})
+	q.PushBack(location{dir, startdepth})
 	for q.Len() > 0 {
 		front := q.Front()
 		cloc := q.Remove(front).(location)
@@ -73,7 +73,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, envRootVar+" must be set.")
 		os.Exit(2)
 	}
-	p, err := search(root, name)
+	p, err := search(root, name, 0)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(3)
