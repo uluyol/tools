@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+. "$HOME/.bashrc"
+
+font='/mnt/font/Consolas/26a/font'
+
+trap 'kill $(jobs -p)' EXIT SIGINT SIGTERM
+
+export NAMESPACE=$(mktemp -d /tmp/p9ns.XXXXX)
+9 plumber &>/dev/null &
+9 fontsrv &>/dev/null &
+exec 9 bash -c 'env PATH="$GOPATH/src/github.com/uluyol/tools/acmebin:$PATH" devdrawretina=1 $PLAN9/bin/acme -a -f /mnt/font/Consolas/28a/font '"$@"

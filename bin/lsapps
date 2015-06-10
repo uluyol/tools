@@ -1,0 +1,11 @@
+#!/bin/bash
+SEARCH_PATH=('/Applications' "$HOME/Applications")
+
+for top in "${SEARCH_PATH[@]}"; do
+	for path in "$top"/*; do
+		path=${path##*/}
+		path=${path%.app}
+		printf '%s\n' "$path"
+	done
+done
+

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+if [[ $# -lt 1 ]]; then
+	printf 'Usage: %s infile1.pdf infile2.pdf ...\n'
+	exit 1
+fi
+gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=- "$@"

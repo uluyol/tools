@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BMK_PATH="$HOME/.usr/data/bookmarks"
+BMK_PATH="$HOME/.config/bmk/bookmarks"
 _bmk_all_names=''
 _bmk_all_bookmarks=()
 

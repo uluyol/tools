@@ -131,11 +131,18 @@ func usage() {
 func main() {
 	flag.Usage = usage
 	flag.Parse()
-	bmkPath := os.Getenv("HOME") + "/.usr/data/bookmarks"
+	bmkDir := os.Getenv("HOME") + "/.config/bmk"
+	os.MkdirAll(bmkDir, 0755)
+	bmkPath := bmkDir + "/bookmarks"
 	bmks, err := parseBookmarks(bmkPath)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		if _, ok := err.(*os.PathError); !ok {
+			fmt.Println("HERE")
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		} else {
+			bmks = &bookmarkList{}
+		}
 	}
 	if *shouldList {
 		bmks.dump(os.Stdout)
