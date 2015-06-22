@@ -6,10 +6,10 @@ BACKUPLIST="$CFGDIR/dirlist"
 TSTAMP="$CFGDIR/timestamp.drive"
 FILELIST="$CFGDIR/filelist.drive"
 
-runrdup=(rdup -N "$TSTAMP" "$FILELIST")
-trans=(rdup-tr -Otar)
+runrdup=(rdup -m -M "$TSTAMP" "$FILELIST")
+trans=(rdup-tr -Ocpio)
 z=(lz4)
-encrypt=(mcrypt -a rijndael-128 -m CBC -f "$KEYFILE")
+encrypt=(openssl aes-128-cbc -e -kfile "$KEYFILE")
 upload=(drive upload -s -p 0Bwo0w3lvQN52flpIWWdWWkhCVTlYdzR2UjV0UE9YNUJWRWY5TmJwWmg4QVRJNVVpLXZseVk -t)
 
 if [[ ! -d "$CFGDIR" ]]; then
@@ -30,6 +30,6 @@ IFS=$'\n'
 dirs=($(<"$BACKUPLIST"))
 unset IFS
 
-"${runrdup[@]}" "$dirs" | "${trans[@]}" | "${z[@]}" | "${encrypt[@]}" | "${upload[@]}" "$USER.$(date +%Y%m%d).tar.lz4.nc"
+"${runrdup[@]}" "${dirs[@]}" | "${trans[@]}" | "${z[@]}" | "${encrypt[@]}" | "${upload[@]}" "$USER.$(date +%Y%m%d).cpio.lz4.enc"
 touch "$TSTAMP"
 
