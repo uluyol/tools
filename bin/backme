@@ -63,6 +63,6 @@ fi
 
 "${runrdup[@]}" "${dirs[@]}" | "${trans[@]}" | "${z[@]}" | "${encrypt[@]}" | "${upload[@]}" "$USER.$today.cpio.lz4.enc"
 if [[ $? == 0 ]]; then
-	touch "$(new_stamp_path)"
+	touch "$(new_tstamp_path)"
 	printf "%s" "$today" > "$INCREMENTALMETA/LATEST"
 fi
