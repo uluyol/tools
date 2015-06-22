@@ -3,17 +3,42 @@
 CFGDIR="$HOME/.config/backme"
 KEYFILE="$CFGDIR/key"
 BACKUPLIST="$CFGDIR/dirlist"
-TSTAMP="$CFGDIR/timestamp.drive"
-FILELIST="$CFGDIR/filelist.drive"
+INCREMENTALMETA="$CFGDIR/data.drive"
 
-runrdup=(rdup -m -M "$TSTAMP" "$FILELIST")
 trans=(rdup-tr -Ocpio)
 z=(lz4)
 encrypt=(openssl aes-128-cbc -e -kfile "$KEYFILE")
 upload=(drive upload -s -p 0Bwo0w3lvQN52flpIWWdWWkhCVTlYdzR2UjV0UE9YNUJWRWY5TmJwWmg4QVRJNVVpLXZseVk -t)
+today=$(date +%Y%m%d)
+
+old_tstamp_path() {
+	if [[ -z "$1" ]]; then
+		printf ""
+		return
+	fi
+	printf "%s/timestamp.%s" "$INCREMENTALMETA" "$1"
+}
+
+new_tstamp_path() {
+	printf "%s/timestamp.%s" "$INCREMENTALMETA" "$today"
+}
+
+filelist_path() {
+	if [[ -n "$1" ]]; then
+		cp "$INCREMENTALMETA/filelist.$1" "$INCREMENTALMETA/filelist.$today"
+	fi
+	printf "%s/filelist.%s" "$INCREMENTALMETA" "$today"
+}
 
 if [[ ! -d "$CFGDIR" ]]; then
 	mkdir -p "$CFGDIR"
+fi
+
+latest=""
+if [[ ! -d "$INCREMENTALMETA" ]]; then
+	mkdir -p "$INCREMENTALMETA"
+elif [[ -f "$INCREMENTALMETA/LATEST" ]]; then
+	latest=$(<"$INCREMENTALMETA/LATEST")
 fi
 
 if [[ ! -f "$BACKUPLIST" ]]; then
@@ -29,7 +54,15 @@ fi
 IFS=$'\n'
 dirs=($(<"$BACKUPLIST"))
 unset IFS
+old_tstamp=$(old_tstamp_path "$latest")
+if [[ -z "$old_tstamp" ]]; then
+	runrdup=(rdup -m "$(filelist_path "$latest")")
+else
+	runrdup=(rdup -m -M "$old_tstamp" "$(filelist_path "$latest")")
+fi
 
-"${runrdup[@]}" "${dirs[@]}" | "${trans[@]}" | "${z[@]}" | "${encrypt[@]}" | "${upload[@]}" "$USER.$(date +%Y%m%d).cpio.lz4.enc"
-touch "$TSTAMP"
-
+"${runrdup[@]}" "${dirs[@]}" | "${trans[@]}" | "${z[@]}" | "${encrypt[@]}" | "${upload[@]}" "$USER.$today.cpio.lz4.enc"
+if [[ $? == 0 ]]; then
+	touch "$(new_stamp_path)"
+	printf "%s" "$today" > "$INCREMENTALMETA/LATEST"
+fi
