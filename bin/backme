@@ -32,3 +32,4 @@ unset IFS
 
 "${runrdup[@]}" "$dirs" | "${trans[@]}" | "${z[@]}" | "${encrypt[@]}" | "${upload[@]}" "$USER.$(date +%Y%m%d).tar.lz4.nc"
 touch "$TSTAMP"
+
