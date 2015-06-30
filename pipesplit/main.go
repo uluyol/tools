@@ -116,7 +116,7 @@ func main() {
 			os.Exit(1)
 		}
 		w := io.MultiWriter(siw, hash)
-		for c := int64(0); c < chunksize && err == nil; c += chunksize {
+		for c := int64(0); c < chunksize && err == nil; {
 			n := int(min(bufSize, chunksize-c))
 			n, err = os.Stdin.Read(buf[:n])
 			if err != nil && err != io.EOF {
@@ -129,9 +129,8 @@ func main() {
 				}
 				noMoreData = true
 			}
-			_, errWrite := w.Write(buf[:n])
-			if errWrite != nil {
-				fmt.Fprintf(os.Stderr, "unrecoverable error on write: %v\n", errWrite)
+			if _, err := w.Write(buf[:n]); err != nil {
+				fmt.Fprintf(os.Stderr, "unrecoverable error on write: %v\n", err)
 				os.Exit(1)
 			}
 			c += int64(n)
@@ -143,9 +142,6 @@ func main() {
 		if *verbose {
 			fmt.Printf("%s:\n", SimpleCommand(runcmd))
 			io.Copy(os.Stdout, &cmdOutBuf)
-		}
-		if err != nil {
-			os.Exit(1)
 		}
 		if _, ok := hash.(NullHash); !ok {
 			hashBytes = hash.Sum(hashBytes[:0])
