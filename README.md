@@ -1,6 +1,7 @@
 This repository contains small tools that I use.
 
 * **bmk**: A tool to "bookmark" directories for fast access. Import bmk.bashrc in your .bashrc and use bcd to change directories.
+* **dhack**: A simple wrapper around docker to run local binaries in a hermetic environment.
 * **findunversioned**: A tool to find directories that are not contained in any version controlled repository. This does **not** find subdirectories or files within version controlled repositories that are not being tracked. Good for running under a personal src/ dir for instance.
 * **pipesplit**: A tool that will chunk data for you. This is a bit quirky as was designed to meet the needs of my personal backup system. It can optionally create SHA-256 hashes of files.
 * **simpleserv**: Serves the directory under an http server.
