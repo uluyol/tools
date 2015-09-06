@@ -9,7 +9,6 @@ This repository contains small tools that I use.
 
 Under bin/:
 
-* **backme**: My personal incremental, encrypted backup script using rdup.
 * **lsapps**: Lists applications in OSX.
 * **pdfcat**: Concatenate PDF files.
 * **startacme**: Starts acme while properly setting up the environment (allows for multiple windows).
