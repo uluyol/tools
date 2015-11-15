@@ -16,7 +16,7 @@ ctl() {
 
 wintag=$(r tag | sed 's/ .*//')
 r body >$tmp
-if ! gofmt <$tmp >$tmp.1 2>$tmp.2; then
+if ! goimports <$tmp >$tmp.1 2>$tmp.2; then
 	sed "s:^<standard input>:$wintag:" $tmp.2
 else
 	if ! cmp $tmp $tmp.1 >/dev/null; then
