@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 . "$HOME/.bashrc"
 
-font='/mnt/font/Consolas/26a/font'
+font='/mnt/font/Consolas/13a/font'
 
 trap 'kill $(jobs -p)' EXIT SIGINT SIGTERM
 
+export EDITOR=E2
 export NAMESPACE=$(mktemp -d /tmp/p9ns.XXXXX)
 9 plumber &>/dev/null &
 9 fontsrv &>/dev/null &
