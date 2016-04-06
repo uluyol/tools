@@ -1,0 +1,3 @@
+#!/bin/sh
+curl -s -o latexrun https://raw.githubusercontent.com/aclements/latexrun/master/latexrun
+chmod a+x latexrun
