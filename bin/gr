@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+pattern=$1
+shift
+if (( $# < 1 )); then
+	# Search only text files
+	find . -type f -exec /usr/bin/grep -Il --null "" {} \; -print0 \
+		| xargs -0 grep -n "$pattern"
+else
+	# Search only text files
+	find "$@" -type f -exec /usr/bin/grep -Il --null "" {} \; -print0 \
+		| xargs -0 grep -n "$pattern"
+fi
