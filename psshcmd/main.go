@@ -4,38 +4,43 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
+	"time"
+
+	"github.com/pkg/errors"
+	"github.com/spf13/pflag"
 )
 
 var (
-	command  string
-	timeout  uint64
-	username string
-	hosts    []string
+	command    []string
+	timeoutDur time.Duration
+	timeoutMS  uint64
+	username   string
+	hosts      []string
 )
 
+func init() {
+	pflag.DurationVarP(&timeoutDur, "timeout", "t", 10*time.Second, "timeout for the command to complete")
+	pflag.StringVarP(&username, "user", "u", "root", "user to login with")
+	pflag.StringSliceVarP(&hosts, "hosts", "h", nil, "hosts to run command on")
+}
+
 func usage() {
-	fmt.Fprintf(os.Stderr, "Usage: %s command timeout user hosts...\n", os.Args[0])
-	fmt.Fprintf(os.Stderr, "timeout should be in seconds (can be a float)\n")
-	os.Exit(1)
+	fmt.Fprintf(os.Stderr, "Usage: %s [options] -- command\n", os.Args[0])
+	pflag.PrintDefaults()
 }
 
 func parseArgs() {
-	if len(os.Args) < 5 {
-		usage()
+	pflag.Usage = usage
+	pflag.Parse()
+	if pflag.NArg() < 1 {
+		log.Fatal("must specify a command")
 	}
-	command = os.Args[1]
-	timeoutf, err := strconv.ParseFloat(os.Args[2], 32)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error while parsing timeout: %v\n", err)
-		usage()
-	}
-	timeout = uint64(timeoutf * 1000) // convert to ms
-	username = os.Args[3]
-	hosts = os.Args[4:]
+	command = pflag.Args()
+	timeoutMS = uint64(timeoutDur / time.Millisecond)
 }
 
 type Req struct {
@@ -80,77 +85,76 @@ type Resp struct {
 	FinalReply         `json:",omitempty,inline"`
 }
 
-func main() {
-	parseArgs()
+func run() error {
 	cmd := exec.Command("GoSSHa", "-l", username)
 	send, err := cmd.StdinPipe()
 	if err != nil {
-		die("failed to create stdin pipe: %v\n", err)
+		return errors.Wrap(err, "failed to create stdin pipe")
 	}
 	recv, err := cmd.StdoutPipe()
 	if err != nil {
-		die("failed to create stdout pipe: %v\n", err)
+		return errors.Wrap(err, "failed to create stdout pipe")
 	}
 	if err := cmd.Start(); err != nil {
-		die("failed to start parallel ssh agent: %v\n", err)
+		return errors.Wrap(err, "failed to start parallel ssh agent")
 	}
+	defer cmd.Process.Kill()
 	scanner := bufio.NewScanner(recv)
 	if !scanner.Scan() {
-		die("error occurred while initializing parallel ssh agent: %v\n", scanner.Err())
+		return errors.Wrap(scanner.Err(), "error occurred during parallel ssh agent init")
 	}
 	var resp Resp
 	if err := json.Unmarshal(scanner.Bytes(), &resp); err != nil {
-		die("error decoding response: %v\n", err)
+		return errors.Wrap(err, "error decoding response")
 	}
 	if resp.Type != "InitializeComplete" || !resp.InitializeComplete.InitializeComplete {
-		die("error occurred while initilizing parallel ssh agent\n")
+		return errors.New("error occurred during parallel ssh agent init")
 	}
 	enc := json.NewEncoder(send)
 	req := Req{
 		Action:  "ssh",
-		Cmd:     command,
-		Timeout: timeout,
+		Cmd:     strings.Join(command, " "),
+		Timeout: timeoutMS,
 		Hosts:   hosts,
 	}
 	if err := enc.Encode(&req); err != nil {
-		die("error occurred while encoding request: %v\n", err)
+		return errors.Wrap(err, "error occurred while encoding request: %v\n")
 	}
-	cleanExit := true
+	var failedHosts []string
 	for scanner.Scan() {
 		var resp Resp
 		if err := json.Unmarshal(scanner.Bytes(), &resp); err != nil {
-			fmt.Fprintf(os.Stderr, "error occured decoding response from parallel ssh agent: %v\n", err)
-			cleanExit = false
+			errors.Wrap(err, "error occured decoding response from parallel ssh agent")
 			continue
 		}
 		switch resp.Type {
 		case "ConnectionProgress":
-			fmt.Printf("Connected to %s\n", resp.ConnectionProgress.ConnectedHost)
+			log.Printf("[%s] connected\n", resp.ConnectionProgress.ConnectedHost)
 		case "UserError":
 			if resp.UserError.IsCritical {
-				fmt.Fprintf(os.Stderr, "Error: %s\n", resp.UserError.ErrorMsg)
-				cmd.Process.Kill()
-				cleanExit = false
+				return errors.New("critical error: " + resp.UserError.ErrorMsg)
 			} else {
-				fmt.Fprintf(os.Stderr, "Warning: %s\n", resp.UserError.ErrorMsg)
+				log.Printf("warning: %s\n", resp.UserError.ErrorMsg)
 			}
 		case "Reply":
-			fmt.Printf("==== Response from %s ====\n", resp.Reply.Hostname)
-			fmt.Printf(" - Success: %t\n", resp.Reply.Success)
+			status := "success"
+			if !resp.Reply.Success {
+				status = "failure"
+				failedHosts = append(failedHosts, resp.Reply.Hostname)
+			}
+			log.Printf("[%s] %s", resp.Reply.Hostname, status)
 			if resp.Reply.ErrMsg != "" {
-				fmt.Printf(" - ErrMsg: %s\n", resp.Reply.ErrMsg)
+				log.Printf("[%s] error message: %s", resp.Reply.Hostname, resp.Reply.ErrMsg)
 			}
 			if resp.Reply.Stdout != "" {
-				fmt.Println(" - Stdout:")
-				fmt.Println(resp.Reply.Stdout)
+				log.Printf("[%s] stdout:\n%s", resp.Reply.Stdout)
 			}
 			if resp.Reply.Stderr != "" {
-				fmt.Println(" - Stderr:")
-				fmt.Println(resp.Reply.Stderr)
+				log.Printf("[%s] stderr:\n%s", resp.Reply.Stderr)
 			}
 		case "FinalReply":
-			fmt.Println("==== Summary ====")
-			fmt.Printf("- Execution Time: %f\n", resp.FinalReply.TotalTime)
+			fmt.Println("summary:")
+			fmt.Printf("\texecution time: %f s\n", resp.FinalReply.TotalTime)
 			var timedout []string
 			for h, t := range resp.FinalReply.TimedOutHosts {
 				if t {
@@ -158,20 +162,26 @@ func main() {
 				}
 			}
 			if len(timedout) > 0 {
-				fmt.Printf("- Timed out: %s\n", strings.Join(timedout, " "))
+				fmt.Printf("\ttimed out: %s\n", strings.Join(timedout, " "))
+				return errors.New("some hosts timed out")
 			}
-			cmd.Process.Kill()
+			if len(failedHosts) > 0 {
+				return errors.Errorf("failed hosts: %s", strings.Join(failedHosts, " "))
+			}
+			return nil
 		default:
-			fmt.Printf("Unexpected response: %s\n", scanner.Text())
-			cmd.Process.Kill()
+			return errors.New("unexpected response: " + scanner.Text())
 		}
 	}
-	if !cleanExit {
-		os.Exit(2)
-	}
+	return nil
 }
 
-func die(format string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, args)
-	os.Exit(1)
+func main() {
+	log.SetPrefix("psshcmd: ")
+	log.SetFlags(0)
+	parseArgs()
+	if err := run(); err != nil {
+		errors.Fprint(os.Stderr, err)
+		os.Exit(2)
+	}
 }
