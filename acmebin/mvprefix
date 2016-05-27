@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+prefix=$1
+shift
+files=$@
+
+if [[ -z $prefix || -z $files ]]; then
+	echo usage: mvprefix prefix file1 [file2...fileN] >&2
+	exit 1
+fi
+
+for f in $files; do
+	mv "$f" "$prefix$f"
+done
