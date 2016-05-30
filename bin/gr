@@ -3,10 +3,8 @@ pattern=$1
 shift
 if (( $# < 1 )); then
 	# Search only text files
-	find . -type f -exec /usr/bin/grep -Il --null "" {} \; -print0 \
-		| xargs -0 grep -n "$pattern"
+	/usr/bin/grep -Rn "$pattern" .
 else
 	# Search only text files
-	find "$@" -type f -exec /usr/bin/grep -Il --null "" {} \; -print0 \
-		| xargs -0 grep -n "$pattern"
+	/usr/bin/grep -Rn "$pattern" "$@"
 fi
