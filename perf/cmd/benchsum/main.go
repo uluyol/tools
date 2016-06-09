@@ -15,7 +15,12 @@ import (
 
 var noPercent = flag.Bool("nopercent", false, "don't use percentages, show the true value")
 
-var benchVals = make(map[string]map[string][]float64)
+type benchResults struct {
+	vals  []float64
+	niter []float64
+}
+
+var benchVals = make(map[string]map[string]benchResults)
 
 func main() {
 	log.SetPrefix("benchsum: ")
@@ -40,8 +45,8 @@ func main() {
 	w := tabwriter.NewWriter(os.Stdout, 8, 8, 1, ' ', 0)
 	fmt.Fprint(w, "name\tmean\tstdev\tstat ...\n")
 	for name, statmap := range benchVals {
-		for st, vals := range statmap {
-			μ, σ := stat.MeanStdDev(vals, nil)
+		for st, results := range statmap {
+			μ, σ := stat.MeanStdDev(results.vals, results.niter)
 			if *noPercent {
 				fmt.Fprintf(w, "%s\t%.2e\t±%.2e\t%s\n", name, μ, σ, st)
 			} else {
@@ -53,11 +58,14 @@ func main() {
 	w.Flush()
 }
 
-func addVal(key, stat string, val float64) {
+func addVal(key, stat string, val, niter float64) {
 	if benchVals[key] == nil {
-		benchVals[key] = make(map[string][]float64)
+		benchVals[key] = make(map[string]benchResults)
 	}
-	benchVals[key][stat] = append(benchVals[key][stat], val)
+	results := benchVals[key][stat]
+	results.vals = append(results.vals, val)
+	results.niter = append(results.niter, niter)
+	benchVals[key][stat] = results
 }
 
 func read(data []byte) {
@@ -79,7 +87,7 @@ func read(data []byte) {
 			if err != nil {
 				continue
 			}
-			addVal(name, f[i+1], v/float64(niter))
+			addVal(name, f[i+1], v, float64(niter))
 		}
 	}
 }
