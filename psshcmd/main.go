@@ -181,7 +181,7 @@ func main() {
 	log.SetFlags(0)
 	parseArgs()
 	if err := run(); err != nil {
-		errors.Fprint(os.Stderr, err)
+		fmt.Fprintf(os.Stderr, "%+v\n", err)
 		os.Exit(2)
 	}
 }
