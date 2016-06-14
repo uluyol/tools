@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -21,6 +22,28 @@ type benchResults struct {
 }
 
 var benchVals = make(map[string]map[string]benchResults)
+
+type statPair struct {
+	stat    string
+	results benchResults
+}
+
+type byStat []statPair
+
+func (s byStat) Len() int           { return len(s) }
+func (s byStat) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s byStat) Less(i, j int) bool { return s[i].stat < s[j].stat }
+
+type benchValsPair struct {
+	name  string
+	stats []statPair
+}
+
+type byName []benchValsPair
+
+func (s byName) Len() int           { return len(s) }
+func (s byName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s byName) Less(i, j int) bool { return s[i].name < s[j].name }
 
 func main() {
 	log.SetPrefix("benchsum: ")
@@ -44,8 +67,21 @@ func main() {
 
 	w := tabwriter.NewWriter(os.Stdout, 8, 8, 1, ' ', 0)
 	fmt.Fprint(w, "name\tmean\tstdev\tstat ...\n")
+	var allVals []benchValsPair
 	for name, statmap := range benchVals {
+		var stats []statPair
 		for st, results := range statmap {
+			stats = append(stats, statPair{stat: st, results: results})
+		}
+		sort.Sort(byStat(stats))
+		allVals = append(allVals, benchValsPair{name: name, stats: stats})
+	}
+	sort.Sort(byName(allVals))
+	for _, p := range allVals {
+		name := p.name
+		for _, p2 := range p.stats {
+			st := p2.stat
+			results := p2.results
 			μ, σ := stat.MeanStdDev(results.vals, results.niter)
 			if *noPercent {
 				fmt.Fprintf(w, "%s\t%.2e\t±%.2e\t%s\n", name, μ, σ, st)
