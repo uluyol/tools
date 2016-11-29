@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 . "$HOME/.bashrc"
 
-font='/mnt/font/Consolas/13a/font'
+#font='/mnt/font/Consolas/13a/font'
+font='/mnt/font/GoMono/12a/font'
 
 trap 'kill $(jobs -p)' EXIT SIGINT SIGTERM
 
@@ -9,4 +10,4 @@ export EDITOR=E2
 export NAMESPACE=$(mktemp -d /tmp/p9ns.XXXXX)
 9 plumber &>/dev/null &
 9 fontsrv &>/dev/null &
-exec env PATH="$GOPATH/src/github.com/uluyol/tools/acmebin:$HOME/bin:$PLAN9/bin:$PATH" devdrawretina=1 $PLAN9/bin/acme -a -f "$font" "$@"
+exec env PATH="$GOPATH/src/github.com/uluyol/tools/acmebin:$HOME/bin:$PATH" devdrawretina=1 $PLAN9/bin/acme -a -f "$font" "$@"
