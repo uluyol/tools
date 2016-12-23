@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+ncols=$1
+shift
+exec cut -c 1-$ncols "$@"
+
