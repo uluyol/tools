@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+dir=$1
+shift
+cmd=$1
+shift
+if [[ ! -d $dir || -z $cmd ]]; then
+	echo usage: rfilter dir cmd args...>&2
+	exit 2
+fi
+
+set -e
+
+IFS=$'\n'
+files=($(find "$dir" -type f))
+unset IFS
+
+for f in "${files[@]}"; do
+	t=$(mktemp)
+	"$cmd" "$@" <"$f" >"$t"
+	mv "$t" "$f"
+done
+
