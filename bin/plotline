@@ -1,0 +1,18 @@
+#!/usr/bin/env Rscript
+
+library(scales)
+library(ggplot2)
+
+data <- scan(file="stdin")
+
+pdf("Rplots.pdf", width=15, height=7.5)
+plot(data, type="l", col="blue")
+
+
+#colnames(data) <- c("Y")
+
+#quartz()
+
+#ggplot(data, aes(y=Y)) + geom_line()
+
+#junk <- dev.off()
