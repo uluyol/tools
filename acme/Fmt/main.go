@@ -2,12 +2,14 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -64,25 +66,95 @@ func usage() {
 	fmt.Fprint(os.Stderr, doc)
 }
 
+type formatter struct {
+	cmd    []string
+	stderr io.WriteCloser
+}
+
+type nopCloser struct {
+	io.Writer
+}
+
+func (nopCloser) Close() error { return nil }
+
+type textReplacer struct {
+	text, replacement []byte
+	buf               bytes.Buffer
+	w                 io.Writer
+}
+
+func (r *textReplacer) Write(b []byte) (int, error) {
+	return r.buf.Write(b)
+}
+
+func (r *textReplacer) Close() error {
+	b := r.buf.Bytes()
+	for i := bytes.Index(b, r.text); i >= 0; i = bytes.Index(b, r.text) {
+		if _, err := r.w.Write(b[:i]); err != nil {
+			return fmt.Errorf("error flushing buffer: %v", err)
+		}
+		if _, err := r.w.Write(r.replacement); err != nil {
+			return fmt.Errorf("error writing replacement: %v", err)
+		}
+		b = b[len(r.text):]
+	}
+	if len(b) > 0 {
+		if _, err := r.w.Write(b); err != nil {
+			return fmt.Errorf("error flushing remainder of buffer: %v", err)
+		}
+	}
+	return nil
+}
+
+func replacer(w io.Writer, text, replacement string) io.WriteCloser {
+	return &textReplacer{
+		text:        []byte(text),
+		replacement: []byte(replacement),
+		w:           w,
+	}
+}
+
 func main() {
 	flag.Usage = usage
 	flag.Parse()
-	var cmd []string
+	var cfmt formatter
 	if flag.NArg() == 0 {
 		p := os.Getenv("samfile")
 		switch {
 		case strings.HasSuffix(p, ".go"):
-			cmd = []string{"goimports"}
+			cfmt = formatter{
+				cmd:    []string{"goimports"},
+				stderr: nopCloser{os.Stderr},
+			}
 		case suffixOneOf(p, ".c", ".cc", ".cpp", ".cxx", ".h", ".hpp"):
-			cmd = []string{"clang-format"}
+			cfmt = formatter{
+				cmd:    []string{"clang-format"},
+				stderr: nopCloser{os.Stderr},
+			}
+		case strings.HasSuffix(p, ".java"):
+			cfmt = formatter{
+				cmd:    []string{"google-java-format", "-"},
+				stderr: replacer(os.Stderr, "<stdin>", filepath.Base(p)),
+			}
+		case strings.HasSuffix(p, ".scala"):
+			cfmt = formatter{
+				cmd:    []string{"scalafmt", "--stdin"},
+				stderr: nopCloser{os.Stderr},
+			}
 		case strings.HasSuffix(p, ".json"):
-			cmd = []string{"jq", "-M", "."}
+			cfmt = formatter{
+				cmd:    []string{"jq", "-M", "."},
+				stderr: nopCloser{os.Stderr},
+			}
 		default:
 			fmt.Fprintf(os.Stderr, "no default formatter for %s", p)
 			os.Exit(3)
 		}
 	} else {
-		cmd = flag.Args()
+		cfmt = formatter{
+			cmd:    flag.Args(),
+			stderr: nopCloser{os.Stderr},
+		}
 	}
 	win, err := openWin()
 	if err != nil {
@@ -95,7 +167,7 @@ func main() {
 		os.Exit(1)
 	}
 	status := 0
-	ffile, sameSize, err := format(win, cmd)
+	ffile, sameSize, err := format(win, cfmt)
 	diff := !sameSize
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "format failed: %s\n", err)
@@ -160,7 +232,8 @@ func showAddr(win *acme.Win, q0, q1 int) error {
 }
 
 // If tmpFile is non-empty, it is created and must be removed by the caller.
-func format(win *acme.Win, run []string) (tmpFile string, sameSize bool, err error) {
+func format(win *acme.Win, formatter formatter) (tmpFile string, sameSize bool, err error) {
+	defer formatter.stderr.Close()
 	tf, err := ioutil.TempFile(os.TempDir(), "Fmt")
 	if err != nil {
 		return "", false, err
@@ -168,10 +241,10 @@ func format(win *acme.Win, run []string) (tmpFile string, sameSize bool, err err
 	tmpFile = tf.Name()
 	br := &countReader{0, bodyReader{win}}
 	fw := &countWriter{0, tf}
-	cmd := exec.Command(run[0], run[1:]...)
+	cmd := exec.Command(formatter.cmd[0], formatter.cmd[1:]...)
 	cmd.Stdin = br
 	cmd.Stdout = fw
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = formatter.stderr
 	if err = cmd.Run(); err != nil {
 		tf.Close()
 	} else {
