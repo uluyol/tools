@@ -40,6 +40,7 @@ func xdgConfigDir() string {
 var (
 	configDir      = flag.String("configdir", defaultConfigDir(), "path to configuration directory")
 	selectedRemote = flag.String("remote", "", "remote server to use (defaults to default in config)")
+	namePre        = flag.String("name", "", "prefix to give session file")
 )
 
 func usage() {
@@ -79,7 +80,11 @@ func main() {
 		}
 		remote = resolveRelative(remote, remHome)
 	}
-	session, f, err := mkSessionFile()
+	pre := ""
+	if *namePre != "" {
+		pre = *namePre + "-"
+	}
+	session, f, err := mkSessionFile(pre)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -236,9 +241,9 @@ var (
 	sessionBodyTmpl = template.Must(template.New("sessionBody").Parse(sessionBody))
 )
 
-func mkSessionFile() (string, *os.File, error) {
+func mkSessionFile(namePre string) (string, *os.File, error) {
 Start:
-	session := "session." + strconv.FormatInt(rand.Int63(), 36)[:5]
+	session := namePre + "session." + strconv.FormatInt(rand.Int63(), 36)[:5]
 	f, err := os.OpenFile(session, os.O_EXCL|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		if os.IsExist(err) {
