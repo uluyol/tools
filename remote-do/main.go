@@ -112,21 +112,13 @@ func main() {
 	}
 
 	fmt.Println("running commands...")
-	doRun, err := execTmpl(doRunTmpl, struct {
-		Cmd []string
-	}{
-		Cmd: flag.Args(),
-	})
-	if err != nil {
-		log.Fatalf("unable to execute doRun template: %v", err)
-	}
 	if !strings.HasPrefix(remote.JunestHome, "/") {
 		remote.JunestHome = "$HOME/" + remote.JunestHome
 	}
 	if !strings.HasPrefix(remote.JunestRepo, "/") {
 		remote.JunestRepo = "$HOME/" + remote.JunestRepo
 	}
-	scriptBody, err := execTmpl(scriptBodyTmpl, struct {
+	outerBody, err := execTmpl(outerBodyTmpl, struct {
 		TempDir    string
 		JunestCmd  []string
 		SessionDir string
@@ -136,16 +128,18 @@ func main() {
 		SessionDir: remSessionDir,
 	})
 	if err != nil {
-		log.Fatalf("unable to execute scriptBody template: %v", err)
+		log.Fatalf("unable to execute outerBody template: %v", err)
 	}
 	cmdRun, err := execTmpl(cmdRunTmpl, struct {
-		DoRun      string
-		ScriptBody string
+		InnerBody  string
+		OuterBody  string
 		SessionDir string
+		Cmd        []string
 	}{
-		DoRun:      doRun,
-		ScriptBody: scriptBody,
+		InnerBody:  innerBody,
+		OuterBody:  outerBody,
 		SessionDir: remSessionDir,
+		Cmd:        flag.Args(),
 	})
 	if err != nil {
 		log.Fatalf("unable to execute cmdRun template: %v", err)
@@ -197,24 +191,25 @@ func execTmpl(t *template.Template, data interface{}) (string, error) {
 	return buf.String(), err
 }
 
-const doRun = `#!/usr/bin/env bash
-export TERM=xterm
+const innerBody = `#!/usr/bin/env bash
 export TMPDIR=/runtmp
 cd "${0%/*}"
-{{range $i, $e := .Cmd}}"{{$e}}" {{end}};
+cmd=$1
+shift
+"$cmd" "$@"
 `
 
-const scriptBody = `#!/usr/bin/env bash
+const outerBody = `#!/usr/bin/env bash
 mkdir -p "{{.TempDir}}"
-env {{range $i, $e := .JunestCmd}}"{{$e}}" {{end}} -p "-b {{.TempDir}}:/runtmp" {{.SessionDir}}/remote-inner.bash
+env {{range $i, $e := .JunestCmd}}"{{$e}}" {{end}} -p "-b {{.TempDir}}:/runtmp" \
+	"{{.SessionDir}}/remote-inner.bash" "$@"
 `
 
 const cmdRun = `\
-echo '{{.DoRun}}'>'{{.SessionDir}}/remote-inner.bash' && \
-echo '{{.ScriptBody}}'>'{{.SessionDir}}/remote-outer.bash' && \
-chmod a+x '{{.SessionDir}}/remote-inner.bash' && \
-chmod a+x '{{.SessionDir}}/remote-outer.bash' && \
-'{{.SessionDir}}/remote-outer.bash'
+echo '{{.OuterBody}}'>'{{.SessionDir}}/remote-outer.bash' && \
+echo '{{.InnerBody}}'>'{{.SessionDir}}/remote-inner.bash' && \
+chmod a+x '{{.SessionDir}}/remote-inner.bash' '{{.SessionDir}}/remote-outer.bash' && \
+'{{.SessionDir}}/remote-outer.bash' {{range $i, $e := .Cmd}}'{{$e}}' {{end}}
 `
 
 const sessionBody = `#!/usr/bin/env bash
@@ -235,8 +230,7 @@ fi
 `
 
 var (
-	doRunTmpl       = template.Must(template.New("doRun").Parse(doRun))
-	scriptBodyTmpl  = template.Must(template.New("scriptBody").Parse(scriptBody))
+	outerBodyTmpl   = template.Must(template.New("outerBody").Parse(outerBody))
 	cmdRunTmpl      = template.Must(template.New("cmdRun").Parse(cmdRun))
 	sessionBodyTmpl = template.Must(template.New("sessionBody").Parse(sessionBody))
 )
