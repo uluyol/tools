@@ -154,10 +154,12 @@ func main() {
 		Host       string
 		SessionDir string
 		TempDir    string
+		Cmd        []string
 	}{
 		Host:       remote.Host,
 		SessionDir: remSessionDir,
 		TempDir:    remTempDir,
+		Cmd:        flag.Args(),
 	})
 	if err != nil {
 		log.Fatalf("unable to execute sessionBody template: %v", err)
@@ -219,8 +221,10 @@ if [[ $1 == clean ]]; then
 	# written with.
 	ssh "{{.Host}}" "rm -rf '{{.SessionDir}}' '{{.TempDir}}'"
 	rm -f "$0"
+elif [[ $1 == cmd ]]; then
+	echo {{range $i, $e := .Cmd}}{{$e}} {{end}}
 else
-	echo "usage: $0 clean" >&2
+	echo "usage: $0 cmd|clean" >&2
 	exit 1
 fi
 `
