@@ -1,0 +1,21 @@
+#!/usr/bin/env Rscript
+
+library(scales)
+library(ggplot2)
+
+args <- commandArgs(trailingOnly=TRUE)
+input <- args[1]
+output <- args[2]
+xt <- args[3]
+yt <- args[4]
+
+data <- read.csv(input, header=FALSE)
+colnames(data) <- c("X")
+
+pdf(output, width=8, height=5)
+ggplot(data, aes(x=X)) +
+	stat_ecdf() +
+	xlab(xt) +
+	ylab(yt)
+
+junk <- dev.off()
