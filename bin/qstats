@@ -20,10 +20,12 @@ min = float('inf')
 max = float('-inf')
 count = 0
 total = float(0)
+prod = float(1)
 for line in sys.stdin:
 	count += 1
 	v = float(line)
 	total += v
+	prod *= v
 	all.append(v)
 	if v > max:
 		max = v
@@ -37,20 +39,22 @@ pct75 = get_percentile(all, 0.75)
 pct95 = get_percentile(all, 0.95)
 pct99 = get_percentile(all, 0.99)
 mean = total / count
+geomean = prod ** (1/float(count))
 
 stddev = sum((x-mean)**2 for x in all)
 stddev /= len(all)-1
 stddev = stddev**0.5
 
-print("sum:    " + str(total))
-print("min:    " + str(min))
-print("pct25:  " + str(pct25))
-print("median: " + str(median))
-print("pct75:  " + str(pct75))
-print("pct95:  " + str(pct95))
-print("pct99:  " + str(pct99))
-print("max:    " + str(max))
-print("mean:   " + str(mean))
-print("stddev: " + str(stddev))
-print("count:  " + str(count))
+print("sum:     " + str(total))
+print("min:     " + str(min))
+print("pct25:   " + str(pct25))
+print("median:  " + str(median))
+print("pct75:   " + str(pct75))
+print("pct95:   " + str(pct95))
+print("pct99:   " + str(pct99))
+print("max:     " + str(max))
+print("geomean: " + str(geomean))
+print("mean:    " + str(mean))
+print("stddev:  " + str(stddev))
+print("count:   " + str(count))
 
