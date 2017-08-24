@@ -129,7 +129,7 @@ int main(const int argc, const char **argv) {
   }
 
   std::vector<std::string> names;
-  split(&names, tofind, ',');
+  split(&names, tofind, '/');
   std::string p;
   bool ok;
   std::tie(p, ok) = search(root, names, 0, 0);
