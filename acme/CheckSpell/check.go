@@ -34,7 +34,9 @@ func main() {
 			break
 		}
 	}
-	cmd := exec.Command("aspell", "-a")
+	aspellArgs := []string{"-a"}
+	aspellArgs = addLangArgs(aspellArgs)
+	cmd := exec.Command("aspell", aspellArgs...)
 	cmd.Stdin = prefixer.New(bodyReader{win}, "^")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -46,6 +48,15 @@ func main() {
 	if err := cmd.Wait(); err != nil && err != io.EOF {
 		log.Fatalf("error running \"aspell -a\": %v", err)
 	}
+}
+
+func addLangArgs(args []string) []string {
+	p := os.Getenv("samfile")
+	switch {
+	case strings.HasSuffix(p, ".tex"):
+		return append(args, "-t")
+	}
+	return args
 }
 
 type bodyReader struct{ *acme.Win }
