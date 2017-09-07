@@ -146,6 +146,11 @@ func main() {
 				cmd:    []string{"jq", "-M", "."},
 				stderr: nopCloser{os.Stderr},
 			}
+		case suffixOneOf(p, ".sh", ".bash"):
+			cfmt = formatter{
+				cmd:    []string{"shfmt"},
+				stderr: nopCloser{os.Stderr},
+			}
 		default:
 			fmt.Fprintf(os.Stderr, "no default formatter for %s", p)
 			os.Exit(3)
