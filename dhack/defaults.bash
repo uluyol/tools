@@ -1,4 +1,0 @@
-DHACK_BASE="ubuntu"
-DHACK_MOUNT="/mnt"
-
-export DHACK_BASE DHACK_MOUNT
