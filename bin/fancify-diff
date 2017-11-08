@@ -1,4 +1,0 @@
-#!/bin/sh
-
-sed 's/diff -[a-zA-Z0-9]\{1,\}/diff --git/g' | colordiff | diff-so-fancy | less -R
-
