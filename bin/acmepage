@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+name=/pager-$samfile/
+wid=$(9p read acme/index | awk "\$6 == \"$name\" { print \$1 }")
+if [[ -z $wid ]]; then
+	echo "name $name" | 9p write acme/new/ctl
+	wid=$(9p read acme/index | awk "\$6 == \"$name\" { print \$1 }")
+fi
+nobs | 9p write acme/$wid/body
+9p read acme/$wid/event 2>/dev/null | acmeevent | (while read line; do
+	fields=($line)
+	if [[ ${fields[0]} == event && ${fields[1]} == M && ${fields[2]} =~ ^[xX]$ ]]; then
+		echo "${fields[1]}${fields[2]}${fields[3]} ${fields[4]}" | 9p write acme/$wid/event
+	fi
+done)
