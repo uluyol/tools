@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
-name=/pager-$samfile/
+name=/pager-$samfile
 wid=$(9p read acme/index | awk "\$6 == \"$name\" { print \$1 }")
 if [[ -z $wid ]]; then
-	echo "name $name" | 9p write acme/new/ctl
+	printf "%s\n" "name $name" | 9p write acme/new/ctl
 	wid=$(9p read acme/index | awk "\$6 == \"$name\" { print \$1 }")
 fi
 nobs | 9p write acme/$wid/body
+#echo 0,#0 | 9p write acme/$wid/addr
 9p read acme/$wid/event 2>/dev/null | acmeevent | (while read line; do
 	fields=($line)
 	if [[ ${fields[0]} == event && ${fields[1]} == M && ${fields[2]} =~ ^[xX]$ ]]; then
