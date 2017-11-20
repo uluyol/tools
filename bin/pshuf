@@ -1,0 +1,7 @@
+#!/usr/bin/env perl
+#
+# Source: https://stackoverflow.com/a/17581317/4873134
+
+use List::Util 'shuffle';
+
+print shuffle<STDIN>;
