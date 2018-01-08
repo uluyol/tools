@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+
+import argparse
+import sys
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-F", default=",", type=str)
+parser.add_argument("input", nargs="?", type=argparse.FileType("r"),
+	default=sys.stdin)
+args = parser.parse_args()
+
+for line in args.input:
+	fields = line.strip().split(args.F)
+	for i in range(len(fields)):
+		print(i, fields[i])
+	break
