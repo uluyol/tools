@@ -134,7 +134,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	print(os.Stderr, res, colSel, *targetCol-1, *fieldDelim)
+	print(os.Stdout, res, colSel, *targetCol-1, *fieldDelim)
 }
 
 func print(w io.Writer, res slurpResult, colSet []int, targetCol int, delim string) error {
