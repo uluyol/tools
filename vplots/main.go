@@ -119,6 +119,20 @@ button:focus { outline:0; }
 	<script>
 	selectedIdx = 0;
 
+	document.onkeydown = checkKey;
+
+	function checkKey(e) {
+		e = e || window.event;
+
+		if (e.keyCode == '38' || e.keyCode == '37') {
+			// up or left arrow
+			scrollTo(selectedIdx-1);
+		} else if (e.keyCode == '40' || e.keyCode == '39') {
+			// down or right arrow
+			scrollTo(selectedIdx+1);
+		}
+	}
+
 	function openInNewTab() {
 		var url = document.getElementById('im-box').data;
 		var win = window.open(url, '_blank');
@@ -129,6 +143,13 @@ button:focus { outline:0; }
 		document.getElementById('im-box').data = url;
 		document.getElementById('thumb-box-' + elemIdx).classList.add('thumb-box-selected');
 		selectedIdx = elemIdx;
+	}
+	function scrollTo(num) {
+		var elem = document.getElementById('thumb-box-' + num);
+		if (elem != null) {
+			elem.onclick();
+			elem.scrollIntoView(true);
+		}
 	}
 	function openPNG() {
 		var imUrl = document.getElementById('im-box').data;
