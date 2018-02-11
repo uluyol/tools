@@ -72,6 +72,10 @@ body {
 	cursor: pointer;
 }
 
+.thumb-box-selected {
+	background: #eee;
+}
+
 #im-box {
 	margin: 0;
 	border: none;
@@ -97,7 +101,7 @@ button:focus { outline:0; }
 <body>
 	<div id="sidebar">
 	{{range $index, $p := .Plots}}
-		<a class="thumb-box" onclick="showImage('/images/{{$index}}')">
+		<a id="thumb-box-{{$index}}" class="thumb-box{{if eq $index 0}} thumb-box-selected{{end}}" onclick="showImage({{$index}}, '/images/{{$index}}')">
 			<object data="/images/{{$index}}" type="image/svg+xml" style="pointer-events: none;"></object>
 			<div class="imtitle">{{$p}}</div>
 		</a>
@@ -113,24 +117,29 @@ button:focus { outline:0; }
 		</object>
 	</div>
 	<script>
+	selectedIdx = 0;
+
 	function openInNewTab() {
-		var url = document.getElementById("im-box").data;
+		var url = document.getElementById('im-box').data;
 		var win = window.open(url, '_blank');
 		win.focus();
 	}
-	function showImage(url) {
-		document.getElementById("im-box").data = url;
+	function showImage(elemIdx, url) {
+		document.getElementById('thumb-box-' + selectedIdx).classList.remove('thumb-box-selected')
+		document.getElementById('im-box').data = url;
+		document.getElementById('thumb-box-' + elemIdx).classList.add('thumb-box-selected');
+		selectedIdx = elemIdx;
 	}
 	function openPNG() {
-		var imUrl = document.getElementById("im-box").data;
-		var imUrlSplit = imUrl.split("/");
+		var imUrl = document.getElementById('im-box').data;
+		var imUrlSplit = imUrl.split('/');
 		var imID = imUrlSplit[imUrlSplit.length-1];
-		var win = window.open("/pngs/" + imID, '_blank');
+		var win = window.open('/pngs/' + imID, '_blank');
 		win.focus();
 	}
 	function quit() {
 		var r = new XMLHttpRequest();
-		r.open("GET", "/quit");
+		r.open('GET', '/quit');
 		r.send();
 	}
 	</script>
