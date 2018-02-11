@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -17,6 +20,11 @@ const indexTemplStr = `<!doctype html>
 <head>
 <title>Plot Viewer</title>
 <style>
+* {
+	margin: 0;
+	padding: 0;
+}
+
 html {
 	height: 100%;
 	font-family: sans-serif;
@@ -31,7 +39,8 @@ body {
 #sidebar {
 	width: 260px;
 	height: 100%;
-	padding: 10px;
+	overflow: scroll;
+	padding: 0 10px;
 }
 
 #sidebar * {
@@ -44,11 +53,14 @@ body {
 }
 
 #main-content {
-	margin: 10px;
 	height: 100%;
 	flex-grow: 100;
 	display: flex;
 	flex-direction: column;
+}
+
+.thumb-box:first-child {
+	margin-top: 10px;
 }
 
 .thumb-box {
@@ -66,7 +78,12 @@ body {
 	flex-grow: 100;
 }
 
+.button-bar {
+	margin: 10px;
+}
+
 button {
+	padding: 1px 4px;
 	font-size: 1.1em;
 	background: white;
 	border: 1 px solid #ccc;
@@ -87,9 +104,10 @@ button:focus { outline:0; }
 	{{end}}
 	</div>
 	<div id="main-content">
-		<div>
+		<div class="button-bar">
 			<button id="open" onclick="openInNewTab()">Open in Tab</button>
 			<button id="cp-png" onclick="openPNG()">Open PNG</button>
+			<button id="exit" onclick="quit()">Quit</button>
 		</div>
 		<object id="im-box" data="/images/0" type="image/svg+xml" style="pointer-events: none;">
 		</object>
@@ -109,6 +127,11 @@ button:focus { outline:0; }
 		var imID = imUrlSplit[imUrlSplit.length-1];
 		var win = window.open("/pngs/" + imID, '_blank');
 		win.focus();
+	}
+	function quit() {
+		var r = new XMLHttpRequest();
+		r.open("GET", "/quit");
+		r.send();
 	}
 	</script>
 </body>
@@ -186,6 +209,15 @@ func (v plotViewer) pngHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(v.pngCache[id])
 }
 
+type quitHandler struct {
+	s *http.Server
+}
+
+func (h quitHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx, _ := context.WithTimeout(r.Context(), 5*time.Second)
+	h.s.Shutdown(ctx)
+}
+
 func main() {
 	log.SetFlags(0)
 	log.SetPrefix("vplots: ")
@@ -204,7 +236,37 @@ func main() {
 	r.HandleFunc("/", v.rootHandler)
 	r.HandleFunc("/images/{id:[0-9]+}", v.imageHandler)
 	r.HandleFunc("/pngs/{id:[0-9]+}", v.pngHandler)
-	http.Handle("/", r)
 
-	log.Fatal(http.ListenAndServe("127.0.0.1:6544", nil))
+	s := &http.Server{
+		Addr:    "127.0.0.1:6544",
+		Handler: r,
+	}
+	r.Handle("/quit", quitHandler{s})
+	go openURL(s.Addr)
+	s.ListenAndServe()
+}
+
+func openURL(url string) {
+	url = "http://" + url
+
+	for tries := 5; tries > 5; tries-- {
+		if _, err := http.Get(url); err == nil {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = exec.Command("open", url)
+	case "linux", "freebsd", "solaris":
+		cmd = exec.Command("xdg-open", url)
+	default:
+		log.Printf("no known open command, connect to %s", url)
+		return
+	}
+	if err := cmd.Start(); err != nil {
+		log.Printf("open command failed, connect to %s: %v", url, err)
+	}
 }
