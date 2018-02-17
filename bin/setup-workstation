@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+set -e
+
+OPTDIR=$HOME/opt
+
+GSED=sed
+os=linux
+if [[ $(uname) == Darwin ]]; then
+	os=darwin
+	GSED=gsed
+fi
+
+goarch=amd64
+if [[ $(uname -m) != x86_64 ]]; then
+	echo unsupported arch: $(uname -m)
+fi
+
+# TODO: automatically learn latest version
+# See https://golang.org/issues/23746
+GOVER=1.10
+
+mkdir -p "$OPTDIR"
+
+mygover=$(go version | $GSED -En 's/.*go version go([^ ]+).*/\1/p') || true
+if [[ $GOVER != $mygover ]]; then
+	echo fetch go
+	(
+		cd "$OPTDIR"
+		curl -s "https://dl.google.com/go/go${GOVER}.${os}-${goarch}.tar.gz" |
+			tar xzf -
+	)
+fi
+
+echo fetch plan9port
+(
+	cd "$OPTDIR"
+	do_install=0
+	if [[ ! -e p9p ]]; then
+		git clone git@github.com:9fans/plan9port.git p9p
+		do_install=1
+	else
+		cd p9p
+		old=$(git rev-parse --short HEAD)
+		git pull
+		new=$(git rev-parse --short HEAD)
+		if [[ $old != $new ]]; then
+			do_install=1
+		fi
+		cd ..
+	fi
+	if ((do_install == 1)); then
+		echo install p9p
+		cd p9p
+		./INSTALL
+	fi
+)
