@@ -37,7 +37,7 @@ attach)
 	export OUT_SESSION_TTY=$(tty)
 	exec abduco -a "$sess" "${cmd[@]}"
 	;;
-detach) ;;
+detach)
 	if [[ -z $OUT_SESSION_TTY ]]; then
 		echo not in abduco session >&2
 		exit 1
