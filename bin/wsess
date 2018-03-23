@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+action=list
+cmd=(bash)
+sess=""
+next_sess=0
+
+while [[ $# -gt 0 ]]; do
+	if ((next_sess)); then
+		next_sess=0
+		sess="$1"
+		continue
+	fi
+	case "$1" in
+	-a)
+		action=attach
+		;;
+	-d)
+		action=detach
+		;;
+	-l)
+		action=list
+		;;
+	*)
+		cmd=("$@")
+		break
+		;;
+	esac
+done
+
+case $action in
+create)
+	export OUT_SESSION_TTY=$(tty)
+	exec abduco -c "$sess" "${cmd[@]}"
+	;;
+attach)
+	export OUT_SESSION_TTY=$(tty)
+	exec abduco -a "$sess" "${cmd[@]}"
+	;;
+detach) ;;
+	if [[ -z $OUT_SESSION_TTY ]]; then
+		echo not in abduco session >&2
+		exit 1
+	fi
+	apid=$(ps -t "$OUT_SESSION_TTY" | awk '/abduco/ { print $1 }')
+	exec kill $apid
+	;;
+list)
+	exec abduco
+	;;
+*)
+	echo unknown action $action >&2
+	exit 2
+	;;
+esac
