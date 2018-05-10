@@ -1,2 +1,9 @@
-#!/usr/bin/env 9 sed -f
-s/^#?([^$])/#\1/
+#!/usr/bin/env bash
+
+sym=$1
+
+if [[ ! $sym ]]; then
+	sym="#"
+fi
+
+sed "s!^!${sym}!"
