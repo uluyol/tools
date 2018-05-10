@@ -6,6 +6,7 @@ font='/mnt/font/GoMono/13a/font'
 
 trap 'kill $subpids &>/dev/null' EXIT SIGINT SIGTERM
 
+export acmeshell=$(which bash)
 export EDITOR=E2
 export NAMESPACE=$(mktemp -d /tmp/p9ns.XXXXX)
 
