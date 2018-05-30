@@ -5,7 +5,6 @@ BINS := \
 	$(BINDIR)/humannum \
 	$(BINDIR)/srcsearch \
 	$(BINDIR)/runbg \
-	$(BINDIR)/runbg-linux \
 	$(BINDIR)/maplabel
 
 install: $(BINS)
