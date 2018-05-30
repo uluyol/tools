@@ -13,6 +13,7 @@ uses srcsearch to quickly cd into a workspace.
 #include <memory>
 #include <sstream>
 #include <stdlib.h>
+#include <string.h>
 #include <string>
 #include <vector>
 
