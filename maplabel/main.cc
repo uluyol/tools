@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
   }
 
   std::string curdir = args[args.size() - 1];
-  for (int i = 1; i + 1 < args.size(); i += 2) {
+  for (size_t i = 1; i + 1 < args.size(); i += 2) {
     if (curdir.find(args[i + 1]) == 0 &&
         (curdir[curdir.size() - 1] == '/' ||
          curdir.size() == args[i + 1].size())) {
