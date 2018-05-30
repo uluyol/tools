@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
     if (curdir.find(args[i + 1]) == 0 &&
         (curdir[curdir.size() - 1] == '/' ||
          curdir.size() == args[i + 1].size())) {
-      std::cout << args[i] + curdir.substr(args[i + 1].size()) << "\n";
+      std::cout << "\033];" << args[i] + curdir.substr(args[i + 1].size()) << "\007\n";
       return 0;
     }
   }
