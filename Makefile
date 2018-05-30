@@ -1,13 +1,24 @@
 CFLAGS ?= -O2 -Wall
 BINDIR ?= $(HOME)/bin
 
-install: $(BINDIR)/humannum $(BINDIR)/srcsearch $(BINDIR)/runbg $(BINDIR)/runbg-linux
+BINS := \
+	$(BINDIR)/humannum \
+	$(BINDIR)/srcsearch \
+	$(BINDIR)/runbg \
+	$(BINDIR)/runbg-linux \
+	$(BINDIR)/maplabel
+
+install: $(BINS)
 
 $(BINDIR)/humannum: humannum/main.c
 	$(CC) $(CFLAGS) -o $@ $<
 	strip $@
 
 $(BINDIR)/srcsearch: srcsearch/main.cc
+	$(CXX) -std=c++11 $(CFLAGS) -o $@ $<
+	strip $@
+
+$(BINDIR)/maplabel: maplabel/main.cc
 	$(CXX) -std=c++11 $(CFLAGS) -o $@ $<
 	strip $@
 
