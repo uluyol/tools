@@ -1,8 +1,11 @@
+#include <fstream>
 #include <iostream>
 #include <vector>
 
 int main(int argc, char **argv) {
   std::vector<std::string> args(argv, argv + argc);
+  std::ofstream tty;
+  tty.open("/dev/tty");
 
   if (args.size() <= 1 || (args.size() & 2) == 1) {
     std::cerr << "usage: maplabel [devlocal remote]... remotedir\n";
@@ -14,11 +17,12 @@ int main(int argc, char **argv) {
     if (curdir.find(args[i + 1]) == 0 &&
         (curdir[curdir.size() - 1] == '/' ||
          curdir.size() == args[i + 1].size())) {
-      std::cout << "\033];" << args[i] + curdir.substr(args[i + 1].size()) << "\007\n";
+      tty << "\033];" << args[i] + curdir.substr(args[i + 1].size())
+          << "\007\n";
       return 0;
     }
   }
 
-  std::cout << curdir << "\n";
+  tty << "\033];" << curdir << "\007\n";
   return 0;
 }
