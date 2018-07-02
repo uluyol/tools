@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+linelen=${1:-80}
+
+filename=${samfile#$PWD/}
+if [[ $filename == $samfile ]]; then
+	filename=${samfile#$PWD}
+fi
+
+#header=$(sed 's/./ /g' <<<"$filename")
+#header="$header   $(printf %${linelen}s |tr ' ' =)"
+header=$(printf %${linelen}s |tr ' ' =)
+
+9p read acme/$winid/body | awk -F, "
+{
+	if (length(\$0) > $linelen) {
+		if (!printed_header) {
+			print \"$header\";
+			printed_header = 1;
+		}
+		printf \"$filename:%d:\n%s\n\", NR, \$0;
+	}
+}"
