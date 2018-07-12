@@ -16,18 +16,19 @@ if [[ $(uname -m) != x86_64 ]]; then
 	echo unsupported arch: $(uname -m)
 fi
 
-# TODO: automatically learn latest version
-# See https://golang.org/issues/23746
-GOVER=1.10
+out=($(curl -s https://golang.org/dl/?mode=json |
+	jq -r ".[0].files[] | select(.kind == \"archive\" and .os == \"$os\" and .arch == \"$goarch\") | \"\\(.version) \\(.filename)\""))
+
+gover=${out[0]}
 
 mkdir -p "$OPTDIR"
 
 mygover=$(go version | $GSED -En 's/.*go version go([^ ]+).*/\1/p') || true
-if [[ $GOVER != $mygover ]]; then
-	echo fetch go
+if [[ $gover != $mygover ]]; then
+	echo "upgrade go: $mygover -> $gover"
 	(
 		cd "$OPTDIR"
-		curl -s "https://dl.google.com/go/go${GOVER}.${os}-${goarch}.tar.gz" |
+		curl -s "https://dl.google.com/go/${out[1]}" |
 			tar xzf -
 	)
 fi
