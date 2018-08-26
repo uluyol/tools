@@ -23,10 +23,13 @@ gover=${out[0]}
 
 mkdir -p "$OPTDIR"
 
-mygover=$(go version | $GSED -En 's/.*go version go([^ ]+).*/\1/p') || true
+mygover=$(go version | $GSED -En 's/.*go version (go[^ ]+).*/\1/p') || true
 if [[ $gover != $mygover ]]; then
 	echo "upgrade go: $mygover -> $gover"
 	(
+		if [[ -e "$OPTDIR/go" ]]; then
+			rm -rf "$OPTDIR/go"
+		fi
 		cd "$OPTDIR"
 		curl -s "https://dl.google.com/go/${out[1]}" |
 			tar xzf -
