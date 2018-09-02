@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+sym=$1
+
+GSED=sed
+if [[ $(uname) == Darwin ]]; then
+	GSED=gsed
+fi
+
+if [[ ! $sym ]]; then
+	sym="#"
+fi
+
+$GSED -E "s!^([^${sym}])!${sym} \1!"
