@@ -14,4 +14,4 @@ export NAMESPACE=$(mktemp -d /tmp/p9ns.XXXXX)
 subpids="$subpids $!"
 9 fontsrv &>/dev/null &
 subpids="$subpids $!"
-env PATH="$GOPATH/src/github.com/uluyol/tools/acmebin:$HOME/bin:$PATH" devdrawretina=1 $PLAN9/bin/acme -a -f "$font" "$@"
+env PATH="$HOME/code/tools/acmebin:$HOME/bin:$PATH" devdrawretina=1 $PLAN9/bin/acme -a -f "$font" "$@"
