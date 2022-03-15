@@ -1,5 +1,7 @@
 module github.com/uluyol/tools
 
+go 1.14
+
 require (
 	9fans.net/go v0.0.0-20180727211846-5d4fa602e1e8
 	github.com/BurntSushi/toml v0.3.0
