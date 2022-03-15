@@ -16,7 +16,7 @@ if [[ $(uname -m) != x86_64 ]]; then
 	echo unsupported arch: $(uname -m)
 fi
 
-out=($(curl -s https://golang.org/dl/?mode=json |
+out=($(curl -s https://go.dev/dl/?mode=json |
 	jq -r ".[0].files[] | select(.kind == \"archive\" and .os == \"$os\" and .arch == \"$goarch\") | \"\\(.version) \\(.filename)\""))
 
 gover=${out[0]}
